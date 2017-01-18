@@ -2,8 +2,6 @@ import pandas as pd
 from sklearn import linear_model
 
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import pylab
 
 import numpy as np
 import sys
@@ -58,6 +56,8 @@ for dim in range(dimensions-1):
 	x = x_final.T[dim]
 	linear_reg = linear_model.LinearRegression()
 	linear_reg.fit(x.reshape(-1,1), y_final)
+	# The score of the fit that tells us how well the linear regression line fits the data
+	print linear_reg.score(x.reshape(-1,1), y_final)
 	#visualize results
 	plt.scatter(x, y_final)
 	plt.plot(x, linear_reg.predict(x.reshape(-1,1)))
