@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/vishalapr/Projects/SirajologyChallenges/DeepLearning-SirajologyChallenges/Sentiment_Analysis/gamemodel.tfl"
+all_model_checkpoint_paths: "/home/vishalapr/Projects/SirajologyChallenges/DeepLearning-SirajologyChallenges/Sentiment_Analysis/gamemodel.tfl"
