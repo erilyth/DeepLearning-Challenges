@@ -3,6 +3,10 @@
 Predict the sentiment in game titles from the IGN game dataset. Classification outputs a class from the set of 11 classes.
 Classes: ('Great', 'Good', 'Okay', 'Mediocre', 'Amazing', 'Bad', 'Awful', 'Painful', 'Unbearable', 'Masterpiece')
 
+Performing sentiment analysis on a small number of output classes such as 2 or 3 (Positive, Negative, Neutral) would give us much higher accuracies compared to using these 11 classes. The task of analyzing the sentiment at a very fine granular level is a hard task.
+
+Results: Best accuracy with stacked GRUs and Dropout - 45.1%
+
 ## Dependencies
 
 * pandas
@@ -13,7 +17,7 @@ Classes: ('Great', 'Good', 'Okay', 'Mediocre', 'Amazing', 'Bad', 'Awful', 'Painf
 ## Features
 
 * Trained multiple architectures with various network shapes and dropout values
-* Stacked LSTMs and GRUs used to compare performance
+* Stacked [LSTMs](https://en.wikipedia.org/wiki/Long_short-term_memory) and [GRUs](https://en.wikipedia.org/wiki/Gated_recurrent_unit) used to compare performance
 * Variants of train/test split to compare performance
 
 ## Challenge
@@ -26,13 +30,15 @@ This is the code for Siraj's challenge on Sentiment Analysis [here](https://www.
 
 ## Results
 
-|Layers 					|Dropouts			|Train/Test split	|Batch-size	|Results	|
-| ------------------------- | ----------------- | ----------------- | --------- | --------- |
-|LSTM(256), LSTM(256)		|(0.6, 0.6)			|0.95				|64			|41.09%		|
-|LSTM(128), LSTM(128)		|(0.8, 0.8)			|0.90				|32			|42.30%		|
-|LSTM(128)					|(0.9)				|0.85				|32			|			|
-
-![Challenge Dataset](Analysis/challengedata.png?raw=true "Challenge Dataset")
+|Layers 						|Dropouts			|Train/Test split	|Batch-size	|Results	|
+| ----------------------------- | ----------------- | ----------------- | --------- | --------- |
+|GRU(128), GRU(128)				|(0.9, 0.9)			|0.90				|32			|45.1%		|
+|GRU(256), GRU(256)				|(0.95, 0.95)		|0.90				|32			|43.5%		|
+|LSTM(128), LSTM(128)			|(0.8, 0.8)			|0.90				|32			|42.3%		|
+|GRU(128)						|(0.9)				|0.90				|64			|41.5%		|
+|LSTM(256), LSTM(256)			|(0.6, 0.6)			|0.95				|64			|41.3%		|
+|LSTM(128)						|(0.9)				|0.85				|32			|41.2%		|
+|LSTM(128), LSTM(128), LSTM(128)|(0.9, 0.9, 0.9)	|0.80				|32			|40.8%		|
 
 ## Usage
 
