@@ -1,30 +1,43 @@
-# how_to_do_math_for_deep_learning
+# Train a neural network to predict Earthquake Magnitudes
 
-This is the code for "How to Do Math Easily - Intro to Deep Learning #4' by Siraj Raval on YouTube
+This is the code for "How to Do Math Easily - Intro to Deep Learning #4's challenge by Siraj Raval on youtube.
 
-##Overview
+## Overview
 
 This is the code for [this](https://youtu.be/N4gDikiec8E) video on Youtube by Siraj Raval apart of the 'Intro to Deep Learning' Udacity nanodegree course. We build a 3 layer feedforward neural network trains on a set of binary number input data and predict the binary number output.
 
-##Dependencies
+## Dependencies
 
-None! 
+* Numpy
 
-Install Jupyter notebook from [here](http://jupyter.readthedocs.io/en/latest/install.html)
+## Usage
 
-##Usage
+Run the demo.py script by running `python demo.py` in terminal.
 
-You can either run the notebook by typing `jupyter notebook` into terminal when in the directory or run the demo.py script by running `python demo.py` in terminal.
+## Features
 
-##Weekly Challenge
+* Used the earthquake magnitude prediction dataset.
+* Added learning rate along with decay based on performance so that the learning curve can be controlled well.
+* Split data into training batches which helped ease the computation to avoid dealing with very large matrices.
+* Varied hyperparameters such as learning rate, number of hidden layers to measure and compare how the errors vary.
+* Iterations per test varied based on the number of hidden units since larger networks take longer to train.
 
-The challenge for this video is to build a neural network to predict the magnitude of an Earthquake given the date, time, Latitude, and Longitude as features. [This](https://www.kaggle.com/usgs/earthquake-database) is the dataset. Optimize at least 1 hyperparameter using Random Search. See [this](http://scikit learn.org/stable/auto_examples/model_selection/randomized_search.html) example for more information.
+## Results
 
-You can use any library you like, *bonus points* are given if you do this using only numpy.
+|Learning Rate 	|Hidden Units	|Error	|
+| ------------- | ------------- | ----- |
+|0.1			|6				|0.8054	|
+|0.1			|12				|0.8090	|
+|0.1			|24				|0.8224	|
+|0.2			|6				|0.8056	|
+|0.2			|12				|0.8089	|
+|0.2			|24				|0.8005	|
+|0.5			|6				|0.8035	|
+|0.5			|12				|0.8086	|
+|0.5			|24				|0.8126	|
 
-#Due Date: Thursday, February 9th at 12 PM PST
 
 ##Credits
 
-Credits for the original code go to [Andrew Trask](http://iamtrask.github.io/2015/07/12/basic-python-network/). I've merely created a wrapper to get people started.
+Credits for the original code go to [Andrew Trask](http://iamtrask.github.io/2015/07/12/basic-python-network/)
 
