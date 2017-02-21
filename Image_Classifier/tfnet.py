@@ -19,17 +19,16 @@ x = tf.placeholder(tf.float32, [None, 17, 17, 1024])
 y = tf.placeholder(tf.float32, [None, 2])
 keep_prob = tf.placeholder(tf.float32) #dropout (keep probability)
 
-def getfeatures(imagedir):
+def getfeatures(file_name):
     # Extract the features from InceptionNet (The features of Mixed_6a layer)
     slim = tf.contrib.slim
     image_size = inception_v4.inception_v4.default_image_size
     checkpoints_dir = os.getcwd()
     with tf.Graph().as_default():
-        image_string = tf.read_file(imagedir)
-        image = tf.image.decode_jpeg(image_string, channels=3)
+        image_path = tf.read_file(file_name)
+        image = tf.image.decode_jpeg(image_path, channels=3)
         processed_image = inception_preprocessing.preprocess_image(image, image_size, image_size, is_training=False)
         processed_images  = tf.expand_dims(processed_image, 0)
-        # Create the model, use the default arg scope to configure the batch norm parameters.
         with slim.arg_scope(inception_v4.inception_v4_arg_scope()):
             vector = inception_v4.inception_v4(processed_images, num_classes=1001, is_training=False)
         init_fn = slim.assign_from_checkpoint_fn(os.path.join(checkpoints_dir, 'inception_v4.ckpt'), slim.get_model_variables('InceptionV4'))
@@ -123,6 +122,7 @@ with tf.Session() as sess:
     while step < training_iters:
         # Consider the first 1000 images
         for file_id in range(0, 1000):
+            acc_cur += 1
             catpath = 'train/cat.' + str(file_id) + '.jpg'
             dogpath = 'train/dog.' + str(file_id) + '.jpg'
             inp_x1, inp_y1 = getfeatures(catpath)[0], [0,1]
@@ -143,8 +143,3 @@ with tf.Session() as sess:
             avg_acc += acc
         step += 1
     print("Optimization Finished!")
-
-    print("Testing Accuracy:", \
-        sess.run(accuracy, feed_dict={x: getfeatures('cat.jpg'),
-                                      y: [[0,1]],
-                                      keep_prob: 1.}))

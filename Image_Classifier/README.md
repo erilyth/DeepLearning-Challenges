@@ -1,36 +1,28 @@
-# A classifier for cats and dogs
+# Cats vs Dogs Classification
 
-This is a response to Siraj's challenge of the week.
+Given input images of cats and dogs, predict which one of them it is. Essentially a binary image classification task. Response for Sirajology's challenge [here](https://www.youtube.com/watch?v=cAICT4Al5Ow)
 
-This is a classifier made with basic TensorFlow, using Transfer Learning from the Inception-V3 model. Data is taken from [this](https://www.kaggle.com/c/dogs-vs-cats) Kaggle competition, as recommended by Siraj. 
+Dataset can be downloaded from [here](https://www.kaggle.com/c/dogs-vs-cats)
 
-## Pipeline
-JPG images --> Inception-V3 --> 2048-dimensional vector --> Fully connected layer --> Prediction
+## Approach
 
-## How to use
+* Read images as batches.
+* Run Inception-V4 to extract 'Mixed_6a' layer features for transfer learning. The shape of the features is (1,17,17,1024).
+* Add a few more convolution + maxpool layers on top of it.
+* Finally add a fully connected layer with dropout to get the final classification results with 2 outputs.
+* Used the Adam optimizer to improve training speed.
 
-### Training
-First, train the model, run:
+## Details
 
-`python classifier.py train`
+* In transfer learning we extract features from one of the layers of the network and then build our own network that we train on top of it. This greatly reduces the number of epochs and the amount of training data required to fit only a few final layers compared to the entire network.
+* Specifically used 'Mixed_6a' layer features since a 17x17 image with 1024 filters seemed appropriate to build my own shallow Convolutional Net on top of it (compared to the initial image of a much larger size).
+* Network shape: (Inception-V4 (till Mixed_6a), Conv2D, MaxPool, Conv2D, MaxPool, Fully Connected, Dropout) 
+* Used 5000 images of cats and 5000 images of dogs from the dataset to achieve prediction accuracies of 80% with only a few hours of training. Using the entire dataset and training for longer would increase the accuracy further.
 
-This script will call the getvector.py script, which uses the Inception-V3 model to produce 2048-dimensional vector representations of images. These 2048-dimensional vectors have already been saved in the data_inputs.txt and data_labels.txt files, for convenience. (It takes quite long on a CPU to run a few hundred images through the Inception network, let alone the full 25,000 image dataset.)
+## Usage
 
-After getting these vector representations, I use a fully connected one layer neural network to output a prediction vector, built with TensorFlow.
+Run the code with `python tfnet.py` and wait for it to complete a 1000 iterations.
 
-For my training, I only used 300 images of cats and dogs combined. Hence the text files only contain 300 training example data. However, the network performs remarkably well for such few training examples. This is perhaps because the Inception model was trained on a lot of pictures of animals like cats and dogs so it's able to extract the relevant features.
+## Credits
 
-### Testing
-To test the model, run:
-
-`python classifier.py test cat.jpg`
-
-This runs the cat.jpg image through the Inception-V3 network to get the 2048-dimensional vector. Then it loads the saved TensorFlow one-layer neural network, and feeds the cat.jpg image vector into it. Do try other pictures too, the predictions are quite accurate.
-
-
-## Notes:
-
-I got a lot of the code from the TF Slim tutorial. It's taken from the [github](https://github.com/tensorflow/models/tree/master/slim). Specifically, I modified Inception-V3.py from [here](https://github.com/tensorflow/models/blob/master/slim/nets/inception_v3.py) to return the 2048-D vector when the inception_v3 function is called, instead of the 1001 logits vector. The 1001 logits vector directly correspond to the 1001 categories that Inception is trained to classify.
-
-
-P.S. made a grammatical error that I realised too late to correct - my variables should be named 'input' instead of 'inputs'
+Sirajology for the starter code and Tensorflow [SLIM pretrained models](https://github.com/tensorflow/models/tree/master/slim#Pretrained)
