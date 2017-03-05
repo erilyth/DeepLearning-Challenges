@@ -15,36 +15,44 @@ width = 512
 
 content_img = Image.open('images/hugo.jpg')
 content_img = content_img.resize((height, width))
-
-style_img = Image.open('images/styles/wave.jpg')
-style_img = style_img.resize((height, width))
-
 content_arr = np.asarray(content_img, dtype='float32')
 content_arr = np.expand_dims(content_arr, axis=0)
-
-style_arr = np.asarray(style_img, dtype='float32')
-style_arr = np.expand_dims(style_arr, axis=0)
-
 content_arr[:, :, :, 0] -= 103.939
 content_arr[:, :, :, 1] -= 116.779
 content_arr[:, :, :, 2] -= 123.68
 # Convert from RGB to BGR
 content_arr = content_arr[:, :, :, ::-1]
-
-style_arr[:, :, :, 0] -= 103.939
-style_arr[:, :, :, 1] -= 116.779
-style_arr[:, :, :, 2] -= 123.68
-# Convert from RGB to BGR
-style_arr = style_arr[:, :, :, ::-1]
-
 content_img = backend.variable(content_arr)
-style_img = backend.variable(style_arr)
+
+style_image_paths = ['images/styles/wave.jpg', 'images/styles/forest.jpg']
+style_imgs = []
+for style_img_path in style_image_paths:
+	style_img = Image.open(style_img_path)
+	style_img = style_img.resize((height, width))
+	style_arr = np.asarray(style_img, dtype='float32')
+	style_arr = np.expand_dims(style_arr, axis=0)
+	style_arr[:, :, :, 0] -= 103.939
+	style_arr[:, :, :, 1] -= 116.779
+	style_arr[:, :, :, 2] -= 123.68
+	# Convert from RGB to BGR
+	style_arr = style_arr[:, :, :, ::-1]
+	style_img = backend.variable(style_arr)
+	style_imgs.append(style_img)
+
 # Channels as the last dimension, using backend Tensorflow
 combination_img = backend.placeholder((1, height, width, 3))
 
-# Build the computation graph for tensorflow
-# We concatenate all the inputs so that they can be passed at once to the model as a batch
-input_tensor = backend.concatenate([content_img, style_img, combination_img], axis=0)
+# We now finally have the content image variable, style image variables and combination image placeholder
+# that we will concatenate to build a final input tensor to build our computation graph on top of, essentially
+# we pass all these inputs to the network as if they are a part of a batch so they are all run parallely and we
+# use the features generated to modify our combination image based on the losses
+
+all_imgs = [content_img]
+for style_img in style_imgs:
+	all_imgs.append(style_img)
+all_imgs.append(combination_img)
+
+input_tensor = backend.concatenate(all_imgs, axis=0)
 
 model = VGG16(input_tensor=input_tensor, weights='imagenet', include_top=False)
 
@@ -85,12 +93,15 @@ def style_loss(style, combination):
 feature_layers = ['block1_conv2', 'block2_conv2', 'block3_conv3', 'block4_conv3', 'block5_conv3']
 for layer_name in feature_layers:
 	layer_features = layers[layer_name]
-	style_features = layer_features[1, :, :, :]
-	combination_features = layer_features[2, :, :, :]
-	style_l = style_loss(style_features, combination_features)
-	loss += (style_weight / len(feature_layers)) * style_l
+	for style_img_idx in range(len(style_imgs)):
+		style_features = layer_features[1 + style_img_idx, :, :, :]
+		combination_features = layer_features[len(layer_features) - 1, :, :, :]
+		style_l = style_loss(style_features, combination_features)
+		loss += (style_weight / (len(feature_layers)*len(style_imgs))) * style_l
 
 # ---------------------------------------------------
+
+# Total variation loss to ensure the image is smooth and continuous throughout
 
 def total_variation_loss(x):
     a = backend.square(x[:, :height-1, :width-1, :] - x[:, 1:, :width-1, :])
@@ -151,12 +162,12 @@ for i in range(iters):
 	end_time = time.time()
 	print('Iteration %d completed in %ds' % (i, end_time - start_time))
 
-x = x.reshape((height, width, 3))
-# Convert back from BGR to RGB to display the image
-x = x[:, :, ::-1]
-x[:, :, 0] += 103.939
-x[:, :, 1] += 116.779
-x[:, :, 2] += 123.68
-x = np.clip(x, 0, 255).astype('uint8')
-img_final = Image.fromarray(x)
-img_final.show()
+	x1 = x.reshape((height, width, 3))
+	# Convert back from BGR to RGB to display the image
+	x1 = x1[:, :, ::-1]
+	x1[:, :, 0] += 103.939
+	x1[:, :, 1] += 116.779
+	x1[:, :, 2] += 123.68
+	x1 = np.clip(x1, 0, 255).astype('uint8')
+	img_final = Image.fromarray(x1)
+	img_final.show()
