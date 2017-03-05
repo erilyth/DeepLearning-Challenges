@@ -72,7 +72,7 @@ def content_loss(content, combination):
 # Add content loss to this layer
 layer_features = layers['block2_conv2']
 content_features = layer_features[0, :, :, :]
-combination_features = layer_features[2, :, :, :]
+combination_features = layer_features[1 + len(style_imgs), :, :, :]
 
 loss += content_weight * content_loss(content_features, combination_features)
 
@@ -95,7 +95,7 @@ for layer_name in feature_layers:
 	layer_features = layers[layer_name]
 	for style_img_idx in range(len(style_imgs)):
 		style_features = layer_features[1 + style_img_idx, :, :, :]
-		combination_features = layer_features[len(layer_features) - 1, :, :, :]
+		combination_features = layer_features[1 + len(style_imgs), :, :, :]
 		style_l = style_loss(style_features, combination_features)
 		loss += (style_weight / (len(feature_layers)*len(style_imgs))) * style_l
 
