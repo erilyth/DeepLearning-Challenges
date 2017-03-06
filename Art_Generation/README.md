@@ -53,13 +53,10 @@ If it doesn't exist, create a file called ~/.keras/keras.json and make sure it l
    }
    ````
 
-You can then run the code by `python styletransfer.py` or the video version by `python styletransfervid.py`
+Specify a list of paths to style images that you would be willing to use and a path to the content image/video within `styletransfer.py` or `styletransfervid.py` and then run the code by `python styletransfer.py` or the video version by `python styletransfervid.py`
 
 
 ### Credits
 
 Artistic-Style-Transfer [hnarayanan](https://github.com/hnarayanan/artistic-style-transfer) and Sirajology for the starter code
-
-
-
 

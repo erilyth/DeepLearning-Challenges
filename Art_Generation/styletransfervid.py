@@ -22,7 +22,7 @@ else:
     rval = False
 while rval:
     c = c + 1
-    if c%16 == 0:
+    if c%2 == 0:
     	frames.append(frame)
     rval, frame = vc.read()
 vc.release()
@@ -199,6 +199,8 @@ for idx in range(len(content_imgs)):
 
 iters = 10
 
+video = cv2.VideoWriter('video-out.avi',-1,1,(width,height))
+
 for i in range(iters):
 	print('Start of iteration', i)
 	start_time = time.time()
@@ -218,5 +220,9 @@ for i in range(iters):
 		x2[:, :, 1] += 116.779
 		x2[:, :, 2] += 123.68
 		x2 = np.clip(x2, 0, 255).astype('uint8')
-		img_final = Image.fromarray(x2)
-		img_final.save('result' + str(i) + str(idx) + '.bmp')
+		if i == iters - 1:
+			video.write(x2)
+			img_final = Image.fromarray(x2)
+			img_final.save('result' + str(i) + str(idx) + '.bmp')
+
+video.release()
