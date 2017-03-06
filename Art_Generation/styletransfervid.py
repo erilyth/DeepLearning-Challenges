@@ -1,3 +1,5 @@
+import cv2
+
 import numpy as np
 import copy
 
@@ -11,19 +13,39 @@ from keras.applications.vgg16 import VGG16
 from scipy.optimize import fmin_l_bfgs_b
 from scipy.misc import imsave
 
-height = 512
-width = 512
+frames = []
+vc = cv2.VideoCapture('temp.mp4')
+c=1
+if vc.isOpened():
+    rval , frame = vc.read()
+else:
+    rval = False
+while rval:
+    cv2.imshow('frame',frame)
+    c = c + 1
+    if c%4 == 0:
+    	frames.append(frame)
+    rval, frame = vc.read()
+vc.release()
+print len(frames)
 
-content_img = Image.open('images/hugo.jpg')
-content_img = content_img.resize((height, width))
-content_arr = np.asarray(content_img, dtype='float32')
-content_arr = np.expand_dims(content_arr, axis=0)
-content_arr[:, :, :, 0] -= 103.939
-content_arr[:, :, :, 1] -= 116.779
-content_arr[:, :, :, 2] -= 123.68
-# Convert from RGB to BGR
-content_arr = content_arr[:, :, :, ::-1]
-content_img = backend.variable(content_arr)
+height = 128
+width = 128
+
+# All the frames of the input video
+content_imgs = []
+for frame in frames:
+	content_img = Image.fromarray(frame)
+	content_img = content_img.resize((height, width))
+	content_arr = np.asarray(content_img, dtype='float32')
+	content_arr = np.expand_dims(content_arr, axis=0)
+	content_arr[:, :, :, 0] -= 103.939
+	content_arr[:, :, :, 1] -= 116.779
+	content_arr[:, :, :, 2] -= 123.68
+	# Convert from RGB to BGR
+	content_arr = content_arr[:, :, :, ::-1]
+	content_img = backend.variable(content_arr)
+	content_imgs.append(content_img)
 
 style_image_paths = ['images/styles/wave.jpg', 'images/styles/forest.jpg']
 style_imgs = []
@@ -41,17 +63,23 @@ for style_img_path in style_image_paths:
 	style_imgs.append(style_img)
 
 # Channels as the last dimension, using backend Tensorflow
-combination_img = backend.placeholder((1, height, width, 3))
+combination_imgs = []
+for t in range(len(frames)):
+	comb_img = backend.placeholder((1, height, width, 3))
+	combination_imgs.append(comb_img)
 
 # We now finally have the content image variable, style image variables and combination image placeholder
 # that we will concatenate to build a final input tensor to build our computation graph on top of, essentially
 # we pass all these inputs to the network as if they are a part of a batch so they are all run parallely and we
 # use the features generated to modify our combination image based on the losses
 
-all_imgs = [content_img]
+all_imgs = []
+for content_img in content_imgs:
+	all_imgs.append(content_img)
 for style_img in style_imgs:
 	all_imgs.append(style_img)
-all_imgs.append(combination_img)
+for comb_img in combination_imgs:
+	all_imgs.append(comb_img)
 
 input_tensor = backend.concatenate(all_imgs, axis=0)
 
@@ -63,7 +91,10 @@ content_weight = 0.025
 style_weight = 5.0
 tv_weight = 1.0
 
-loss = backend.variable(0.)
+losses = []
+for t in range(len(content_imgs)):
+	loss = backend.variable(0.)
+	losses.append(loss)
 
 # --------------------------------------------------
 
@@ -72,10 +103,10 @@ def content_loss(content, combination):
 
 # Add content loss to this layer
 layer_features = layers['block2_conv2']
-content_features = layer_features[0, :, :, :]
-combination_features = layer_features[1 + len(style_imgs), :, :, :]
-
-loss += content_weight * content_loss(content_features, combination_features)
+for content_idx in range(len(content_imgs)):
+	content_features = layer_features[content_idx, :, :, :]
+	combination_features = layer_features[len(content_imgs) + len(style_imgs) + content_idx, :, :, :]
+	losses[content_idx] += content_weight * content_loss(content_features, combination_features)
 
 # --------------------------------------------------
 
@@ -92,13 +123,14 @@ def style_loss(style, combination):
 	return backend.sum(backend.square(S - C)) / (4.0 * (channels ** 2) * (size ** 2))
 
 feature_layers = ['block1_conv2', 'block2_conv2', 'block3_conv3', 'block4_conv3', 'block5_conv3']
-for layer_name in feature_layers:
-	layer_features = layers[layer_name]
-	for style_img_idx in range(len(style_imgs)):
-		style_features = layer_features[1 + style_img_idx, :, :, :]
-		combination_features = layer_features[1 + len(style_imgs), :, :, :]
-		style_l = style_loss(style_features, combination_features)
-		loss += (style_weight / (len(feature_layers)*len(style_imgs))) * style_l
+for content_idx in range(len(content_imgs)):
+	for layer_name in feature_layers:
+		layer_features = layers[layer_name]
+		for style_img_idx in range(len(style_imgs)):
+			style_features = layer_features[len(content_imgs) + style_img_idx, :, :, :]
+			combination_features = layer_features[len(content_imgs) + len(style_imgs) + content_idx, :, :, :]
+			style_l = style_loss(style_features, combination_features)
+			losses[content_idx] += (style_weight / (len(feature_layers)*len(style_imgs))) * style_l
 
 # ---------------------------------------------------
 
@@ -109,25 +141,26 @@ def total_variation_loss(x):
     b = backend.square(x[:, :height-1, :width-1, :] - x[:, :height-1, 1:, :])
     return backend.sum(backend.pow(a + b, 1.25))
 
-loss += tv_weight * total_variation_loss(combination_img)
+for content_idx in range(len(content_imgs)):
+	losses[content_idx] += tv_weight * total_variation_loss(combination_imgs[content_idx])
 
 # ----------------------------------------------------
 
 # Since all of these variables are nodes in our computational graph, we can directly
 # calculate the gradients
-grads = backend.gradients(loss, combination_img)
+grads = backend.gradients(losses, combination_imgs)
 
-outputs = [loss]
+outputs = losses
 outputs += grads
 # Create the function from input combination_img to the loss and gradients
-f_outputs = backend.function([combination_img], outputs)
+f_outputs = backend.function(combination_imgs, outputs)
 
 # We finally have the gradients and losses at the combination_img computed as variables
 # and we can use any standard optimization function to optimize combination_img
 
 def eval_loss_and_grads(x):
-	x = x.reshape((1, height, width, 3))
-	outs = f_outputs([x])
+	x = x.reshape((len(content_imgs), 1, height, width, 3))
+	outs = f_outputs(x)
 	loss_value = outs[0]
 	grad_values = outs[1].flatten().astype('float64')
 	return loss_value, grad_values
@@ -151,7 +184,7 @@ class Evaluator(object):
 
 evaluator = Evaluator()
 
-x = np.random.uniform(0, 255, (1, height, width, 3)) - 128.0
+x = np.random.uniform(0, 255, (len(content_imgs), 1, height, width, 3)) - 128.0
 
 iters = 10
 
@@ -164,12 +197,14 @@ for i in range(iters):
 	print('Iteration %d completed in %ds' % (i, end_time - start_time))
 
 	x1 = copy.deepcopy(x)
-	x1 = x1.reshape((height, width, 3))
-	# Convert back from BGR to RGB to display the image
-	x1 = x1[:, :, ::-1]
-	x1[:, :, 0] += 103.939
-	x1[:, :, 1] += 116.779
-	x1[:, :, 2] += 123.68
-	x1 = np.clip(x1, 0, 255).astype('uint8')
-	img_final = Image.fromarray(x1)
-	img_final.save('result' + str(i) + '.bmp')
+	for idx in range(len(x1.shape[0])):
+		x2 = x1[idx]
+		x2 = x2.reshape((height, width, 3))
+		# Convert back from BGR to RGB to display the image
+		x2 = x2[:, :, ::-1]
+		x2[:, :, 0] += 103.939
+		x2[:, :, 1] += 116.779
+		x2[:, :, 2] += 123.68
+		x2 = np.clip(x2, 0, 255).astype('uint8')
+		img_final = Image.fromarray(x2)
+		img_final.save('result' + str(i) + '.bmp')
