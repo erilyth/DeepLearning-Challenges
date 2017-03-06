@@ -1,17 +1,46 @@
-# How-to-Generate-Art-Demo
-This is the code for "How to Generate Art - Intro to Deep Learning #8' by Siraj Raval on YouTube
+# Art Generation (Style Transfer)
 
-##Overview
+Given an input content image and corresponding style images, combine them to form a final image that has the semantic details and features of the content image but has the artistic style of the style image(s). This allows us to generate unique images by combining various style images and content images. Response for Sirajology's challenge [here](https://youtu.be/Oex0eWoU7AQ)
 
-This is the code for [this](https://youtu.be/Oex0eWoU7AQ) video on Youtube by Siraj Raval as part of the Intro to Deep Learning Nanodegree with Udacity. We're going to re-purpose the pre-trained VGG16 convolutional network that won the ImageNet competition in 2014 for image classification to transfer the style of a given image to another. [This](https://arxiv.org/abs/1508.06576) is the original paper on the topic.
+## Results
+
+#### Run 1
+
+* Input Content and Style Images
+
+<img src="images/hugo.jpg" alt="" width="30%"> <img src="images/styles/wave.jpg" alt="" width="30%"> <img src="images/styles/forest.jpg" alt="" width="30%">
+
+* Final Output
+
+![Output a1](Outputs/Images/Run1/result9.bmp?raw=true "Output a1")
+
+#### Run 2
+
+* Input Content and Style Images
+
+<img src="images/hugo.jpg" alt="" width="30%"> <img src="images/styles/gothic.jpg" alt="" width="30%"> <img src="images/styles/starry_night.jpg" alt="" width="30%">
+
+* Final Output
+
+![Output b1](Outputs/Images/Run2/result9.bmp?raw=true "Output b1")
 
 
-##Dependencies
+## Implementation Details
 
-run `pip install -r requirements.txt` to install the necessary dependencies
+* Uses VGG16 pretrained model to perform style transfer at various layers in the network
+* Performs normalization and converts RGB to BGR as required by VGG16
+* Uses multiple style images which are transferred onto the specified content image
+* Video style transfer takes a video as the input and then generates an output video by performing style transfer on the individual frames (can use multiple styles as well)
+* Frames concatenated to form a batch input which helps speed up the computation (much faster than running the network for each and every frame seperately)
 
 
-##Usage
+## Dependencies
+
+* Run `pip install -r requirements.txt` to install the necessary dependencies
+* Install OpenCV
+
+
+## Usage
 
 If it doesn't exist, create a file called ~/.keras/keras.json and make sure it looks like the following:
 
@@ -24,18 +53,12 @@ If it doesn't exist, create a file called ~/.keras/keras.json and make sure it l
    }
    ````
 
-Then you can run the code via typing `jupyter notebook` into terminal
+You can then run the code by `python styletransfer.py` or the video version by `python styletransfervid.py`
 
 
-#Coding Challenge - Due Date is Thursday, March 9th at 12 PM PST
+### Credits
 
-Use 2 different style images and transfer them both onto a base image. This can be done several ways, take your pic! And if you want even more of a challenge, bonus points are given if you instead perform basic style transfer on video. Remember, a video is just a series of image frames. You'll learn a lot about matrix operations by doing this. Good luck!
-
-
-##Credits
-
-
-The credits for this code go to [hnarayanan](https://github.com/hnarayanan/artistic-style-transfer). I've merely created a wrapper to get people started.
+Artistic-Style-Transfer [hnarayanan](https://github.com/hnarayanan/artistic-style-transfer) and Sirajology for the starter code
 
 
 

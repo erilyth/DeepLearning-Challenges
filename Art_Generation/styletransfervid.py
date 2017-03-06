@@ -21,16 +21,15 @@ if vc.isOpened():
 else:
     rval = False
 while rval:
-    cv2.imshow('frame',frame)
     c = c + 1
-    if c%4 == 0:
+    if c%16 == 0:
     	frames.append(frame)
     rval, frame = vc.read()
 vc.release()
-print len(frames)
+print 'Frames collected:', len(frames)
 
-height = 128
-width = 128
+height = 256
+width = 256
 
 # All the frames of the input video
 content_imgs = []
@@ -47,7 +46,7 @@ for frame in frames:
 	content_img = backend.variable(content_arr)
 	content_imgs.append(content_img)
 
-style_image_paths = ['images/styles/wave.jpg', 'images/styles/forest.jpg']
+style_image_paths = ['images/styles/wave.jpg']
 style_imgs = []
 for style_img_path in style_image_paths:
 	style_img = Image.open(style_img_path)
@@ -160,10 +159,19 @@ f_outputs = backend.function(combination_imgs, outputs)
 
 def eval_loss_and_grads(x):
 	x = x.reshape((len(content_imgs), 1, height, width, 3))
-	outs = f_outputs(x)
-	loss_value = outs[0]
-	grad_values = outs[1].flatten().astype('float64')
-	return loss_value, grad_values
+	xs = []
+	for el in x:
+		el1 = el.reshape((1, height, width, 3))
+		xs.append(el1)
+	outs = f_outputs(xs)
+	loss_value = 0.0
+	for idx in range(len(content_imgs)):
+		loss_value += outs[idx]
+	grad_values = []
+	for idx in range(len(content_imgs)):
+		grad_values.append(outs[len(content_imgs)+idx])
+	grad_values = np.asarray(grad_values)
+	return loss_value, grad_values.flatten().astype('float64')
 
 class Evaluator(object):
 	def __init__(self):
@@ -184,20 +192,24 @@ class Evaluator(object):
 
 evaluator = Evaluator()
 
-x = np.random.uniform(0, 255, (len(content_imgs), 1, height, width, 3)) - 128.0
+xs = []
+for idx in range(len(content_imgs)):
+	x = np.random.uniform(0, 255, (1, height, width, 3)) - 128.0
+	xs.append(x)
 
 iters = 10
 
 for i in range(iters):
 	print('Start of iteration', i)
 	start_time = time.time()
-	x, min_val, info = fmin_l_bfgs_b(evaluator.loss, x.flatten(), fprime=evaluator.grads, maxfun=20)
+	xs, min_val, info = fmin_l_bfgs_b(evaluator.loss, xs, fprime=evaluator.grads, maxfun=20)
 	print('Current loss value:', min_val)
 	end_time = time.time()
 	print('Iteration %d completed in %ds' % (i, end_time - start_time))
 
-	x1 = copy.deepcopy(x)
-	for idx in range(len(x1.shape[0])):
+	x1 = copy.deepcopy(xs)
+	x1 = x1.reshape((len(content_imgs), 1, height, width, 3))
+	for idx in range(len(content_imgs)):
 		x2 = x1[idx]
 		x2 = x2.reshape((height, width, 3))
 		# Convert back from BGR to RGB to display the image
@@ -207,4 +219,4 @@ for i in range(iters):
 		x2[:, :, 2] += 123.68
 		x2 = np.clip(x2, 0, 255).astype('uint8')
 		img_final = Image.fromarray(x2)
-		img_final.save('result' + str(i) + '.bmp')
+		img_final.save('result' + str(i) + str(idx) + '.bmp')
