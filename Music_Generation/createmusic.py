@@ -63,16 +63,18 @@ seed = notes[0:n_prev]
 ############### BUILD MODEL ###############
 print('Build model...')
 model = Sequential()
+model.add(LSTM(256, input_shape=(n_prev, 2), return_sequences=True))
+model.add(Dropout(0.6))
 model.add(LSTM(128, input_shape=(n_prev, 2), return_sequences=True))
-model.add(Dropout(0.2))
+model.add(Dropout(0.6))
 model.add(LSTM(64, input_shape=(n_prev, 2), return_sequences=False))
-model.add(Dropout(0.2))
+model.add(Dropout(0.6))
 model.add(Dense(2))
 model.add(Activation('linear'))
 
 optimizer = RMSprop(lr=0.01)
 model.compile(loss='mse', optimizer='rmsprop')
-model.fit(X, Y, 300, 4, verbose=1)
+model.fit(X, Y, 300, 20, verbose=1)
 ###########################################
 
 ############ MAKE PREDICTIONS #############
