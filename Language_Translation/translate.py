@@ -10,12 +10,11 @@ import time
 import logging
 
 import numpy as np
-from six.moves import xrange  # pylint: disable=redefined-builtin
+from six.moves import xrange
 import tensorflow as tf
 
 import data_utils
 import nltk
-# from tensorflow.models.rnn.translate import seq2seq_model
 import seq2seq_model
 
 tf.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")
@@ -29,8 +28,8 @@ tf.app.flags.DEFINE_integer("size", 512, "Size of each model layer.")
 tf.app.flags.DEFINE_integer("num_layers", 2, "Number of layers in the model.")
 tf.app.flags.DEFINE_integer("s_vocab_size", 30000, "Source language vocabulary size.")
 tf.app.flags.DEFINE_integer("t_vocab_size", 30000, "Target language vocabulary size.")
-tf.app.flags.DEFINE_string("data_dir", "/Users/fancyshmancy/Development/nlp/proj2/data/", "Data directory")
-tf.app.flags.DEFINE_string("train_dir", "/Users/fancyshmancy/Development/nlp/proj2/runs/de_en_lstm_reg/", "Training directory.")
+tf.app.flags.DEFINE_string("data_dir", "./data/", "Data directory")
+tf.app.flags.DEFINE_string("train_dir", "./runs/", "Training directory.")
 tf.app.flags.DEFINE_integer("max_train_data_size", 0,
                             "Limit on the size of training data (0: no limit).")
 tf.app.flags.DEFINE_integer("steps_per_checkpoint", 200,
@@ -115,7 +114,9 @@ def train():
   print("Preparing NMT data in %s" % FLAGS.data_dir)
   print("    source langauge: %s" % source)
   print("    target language: %s" % target)
-  s_train, t_train, s_dev, t_dev, _, _, _, _ = data_utils.prepare_data(FLAGS.data_dir, FLAGS.s_vocab_size, FLAGS.t_vocab_size, source, target)
+  # Generates the preprocessed train and test files and gives their paths. These have tokenized ids.
+  s_train, t_train, s_dev, t_dev, _, _ = data_utils.prepare_data(FLAGS.data_dir, FLAGS.s_vocab_size, FLAGS.t_vocab_size, source, target)
+  print("Tokenized Inputs: ", s_train, t_train, s_dev, t_dev)
   with tf.Session() as sess:
     # Create model.
     print("Creating %d layers of %d units." % (FLAGS.num_layers, FLAGS.size))
