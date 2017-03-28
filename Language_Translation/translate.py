@@ -29,7 +29,7 @@ tf.app.flags.DEFINE_integer("num_layers", 2, "Number of layers in the model.")
 tf.app.flags.DEFINE_integer("s_vocab_size", 30000, "Source language vocabulary size.")
 tf.app.flags.DEFINE_integer("t_vocab_size", 30000, "Target language vocabulary size.")
 tf.app.flags.DEFINE_string("data_dir", "./data/", "Data directory")
-tf.app.flags.DEFINE_string("train_dir", "./runs/", "Training directory.")
+tf.app.flags.DEFINE_string("train_dir", "./runs/fr_en_1/", "Training directory.")
 tf.app.flags.DEFINE_integer("max_train_data_size", 0,
                             "Limit on the size of training data (0: no limit).")
 tf.app.flags.DEFINE_integer("steps_per_checkpoint", 200,
@@ -143,7 +143,8 @@ def train():
     perplexity = 1e10
     train_steps, train_ppx, bucket_ppx = [], [], {0:[], 1:[], 2:[], 3:[]}
     
-    while perplexity>20.:
+    # Put a limit on the number of iterations it takes to train (instead of the perplexity)
+    while current_step <= 2000:
       # Choose a bucket according to data distribution. We pick a random number
       # in [0, 1] and use the corresponding interval in train_buckets_scale.
       random_number_01 = np.random.random_sample()
@@ -198,75 +199,73 @@ def train():
     print(train_ppx)
     print(bucket_ppx)
 
+def test_BLEU():
+    # Perform BLEU score testing here
+    with tf.Session() as sess:
+      model = create_model(sess, False, False)
+      source = sys.argv[1]
+      target = sys.argv[2]
+      model.batch_size = 1  # We decode one sentence at a time.
 
-def testBLEU():
-  source = sys.argv[1]
-  target = sys.argv[2]
-  with tf.Session() as sess:
-    # Create model and load parameters.
-    model = create_model(sess, True, True)
-    model.batch_size = 1  # We decode one sentence at a time.
+      # Load vocabularies.
+      s_vocab_path = os.path.join(FLAGS.data_dir,
+                                  "vocab%d.%s" % (FLAGS.s_vocab_size, source))
+      t_vocab_path = os.path.join(FLAGS.data_dir,
+                                  "vocab%d.%s" % (FLAGS.t_vocab_size, target))
+      s_vocab, _ = data_utils.initialize_vocabulary(s_vocab_path)
+      _, rev_t_vocab = data_utils.initialize_vocabulary(t_vocab_path)
 
-    # Load vocabularies.
-    s_vocab_path = os.path.join(FLAGS.data_dir,
-                                "vocab%d.%s" % (FLAGS.s_vocab_size, source))
-    t_vocab_path = os.path.join(FLAGS.data_dir,
-                                "vocab%d.%s" % (FLAGS.t_vocab_size, target))
-    s_vocab, _ = data_utils.initialize_vocabulary(s_vocab_path)
-    _, rev_t_vocab = data_utils.initialize_vocabulary(t_vocab_path)
+      # Decode from standard input.
+      BLEUscore = {0:[], 1:[], 2:[], 3:[]}
+      s_test_path = os.path.join(FLAGS.data_dir, "test.%s" % source)
+      t_test_path = os.path.join(FLAGS.data_dir, "test.%s" % target)
+      f_s = open(s_test_path, 'r')
+      f_t = open(t_test_path, 'r')
+      # print(f_s.readline())
+      step = 0
+      for sentence in f_s:
+        print(step)
+        # sentence = f_ja.readline()
+        # Get token-ids for the input sentence.
+        token_ids = data_utils.sentence_to_token_ids(tf.compat.as_bytes(sentence), s_vocab)
+        # Which bucket does it belong to?
+        bucket_id = len(_buckets) - 1
+        for i, bucket in enumerate(_buckets):
+          if bucket[0] >= len(token_ids):
+            bucket_id = i
+            break
+        else:
+          logging.warning("Sentence truncated: %s", sentence) 
 
-    # Decode from standard input.
-    BLEUscore = {0:[], 1:[], 2:[], 3:[]}
-    s_test_path = os.path.join(FLAGS.data_dir, "test.%s" % source)
-    t_test_path = os.path.join(FLAGS.data_dir, "test.%s" % target)
-    f_s = open(s_test_path, 'r')
-    f_t = open(t_test_path, 'r')
-    # print(f_s.readline())
-    step = 0
-    for sentence in f_s:
-      print(step)
-      # sentence = f_ja.readline()
-      # Get token-ids for the input sentence.
-      token_ids = data_utils.sentence_to_token_ids(tf.compat.as_bytes(sentence), s_vocab)
-      # Which bucket does it belong to?
-      bucket_id = len(_buckets) - 1
-      for i, bucket in enumerate(_buckets):
-        if bucket[0] >= len(token_ids):
-          bucket_id = i
-          break
-      else:
-        logging.warning("Sentence truncated: %s", sentence) 
-
-      # Get a 1-element batch to feed the sentence to the model.
-      encoder_inputs, decoder_inputs, target_weights = model.get_batch(
-          {bucket_id: [(token_ids, [])]}, bucket_id)
-      # Get output logits for the sentence.
-      _, _, output_logits = model.step(sess, encoder_inputs, decoder_inputs,
-                                       target_weights, bucket_id, True)
-      # This is a greedy decoder - outputs are just argmaxes of output_logits.
-      outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
-      # If there is an EOS symbol in outputs, cut them at that point.
-      if data_utils.EOS_ID in outputs:
-        outputs = outputs[:outputs.index(data_utils.EOS_ID)]
-      # Print out Japanese sentence corresponding to outputs.
-      candidate = [tf.compat.as_str(rev_t_vocab[output]) for output in outputs]
-      reference = f_t.readline().split(' ')
-      try:
-        temp_score = nltk.translate.bleu_score.sentence_bleu([reference], candidate)
-      except:
-        temp_score = nltk.translate.bleu_score.sentence_bleu([reference], candidate, weights=(.5, .5))
-      BLEUscore[bucket_id].append(temp_score)
-      step += 1
-      print(temp_score)
-    for key,val in BLEUscore.iteritems():
-      print(key, ": ", np.mean(val))
-    # print(np.mean(BLEUscore))
-
+        # Get a 1-element batch to feed the sentence to the model.
+        encoder_inputs, decoder_inputs, target_weights = model.get_batch(
+            {bucket_id: [(token_ids, [])]}, bucket_id)
+        # Get output logits for the sentence.
+        _, _, output_logits = model.step(sess, encoder_inputs, decoder_inputs,
+                                         target_weights, bucket_id, True)
+        # This is a greedy decoder - outputs are just argmaxes of output_logits.
+        outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
+        # If there is an EOS symbol in outputs, cut them at that point.
+        if data_utils.EOS_ID in outputs:
+          outputs = outputs[:outputs.index(data_utils.EOS_ID)]
+        # Print out Japanese sentence corresponding to outputs.
+        candidate = [tf.compat.as_str(rev_t_vocab[output]) for output in outputs]
+        reference = f_t.readline().split(' ')
+        print(candidate, reference)
+        try:
+          temp_score = nltk.translate.bleu_score.sentence_bleu([reference], candidate)
+        except:
+          temp_score = nltk.translate.bleu_score.sentence_bleu([reference], candidate, weights=(.5, .5))
+        BLEUscore[bucket_id].append(temp_score)
+        step += 1
+        print(temp_score)
+      for key,val in BLEUscore.iteritems():
+        print(key, ": ", np.mean(val))
+      # print(np.mean(BLEUscore))
 
 def main(_):
   train()
-  testBLEU()
-
+  test_BLEU()
 
 if __name__ == "__main__":
   tf.app.run()

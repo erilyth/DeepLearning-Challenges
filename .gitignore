@@ -1,3 +1,6 @@
 Image_Classifier/train/*
 Image_Classifier/inception_v4.ckpt
 *.pyc
+Language_Translation/runs/*
+Language_Translation/data/*
+Language_Translation/data2/*
