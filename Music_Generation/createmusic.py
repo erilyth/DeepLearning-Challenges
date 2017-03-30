@@ -3,7 +3,8 @@ from mido import MidiFile, MidiTrack, Message
 from keras.layers import LSTM, Dense, Activation, Dropout
 from keras.preprocessing import sequence
 from keras.models import Sequential
-from keras.optimizers import RMSprop
+from keras.optimizers import Adam
+from keras.callbacks import ModelCheckpoint
 
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
@@ -72,9 +73,14 @@ model.add(Dropout(0.6))
 model.add(Dense(2))
 model.add(Activation('linear'))
 
-optimizer = RMSprop(lr=0.01)
-model.compile(loss='mse', optimizer='rmsprop')
-model.fit(X, Y, 300, 20, verbose=1)
+optimizer = Adam(lr=0.001)
+model.compile(loss='mse', optimizer=optimizer)
+filepath="./ckpts/checkpoint_model_{epoch:02d}.hdf5"
+#model.load_weights("./ckpts/checkpoint_model_99.hdf5")
+model_save_callback = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=False, mode='auto', period=5)
+# Train the model for 100 iterations with a batch size of 32
+model.fit(X, Y, 32, 100, verbose=1, callbacks=[model_save_callback])
+
 ###########################################
 
 ############ MAKE PREDICTIONS #############
@@ -93,6 +99,7 @@ for i in range(300):
 	prediction.append(preds)
 
 for pred in prediction:
+	# Undo the preprocessing
 	pred[0] = int((pred[0]/2)*(amax-amin) + (amin+amax)/2)
 	pred[1] = int((pred[1]/2)*(bmax-bmin) + (bmin+bmax)/2)
 	# to reject values that will be out of range
