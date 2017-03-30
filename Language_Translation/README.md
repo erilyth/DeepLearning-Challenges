@@ -1,13 +1,10 @@
-# How_to_make_a_language_translator
-This is the code for "How to Make a Language Translator - Intro to Deep Learning #11' by Siraj Raval on YouTube
+# Language Translation
 
-# Coding Challenge - Due Date Thursday March 30th at 12 PM PST
-
-Make your own language translator using a deep learning architecture of your choice in Tensorflow. It doesn't have to use Neural Machine Translation specifically. [Here](https://github.com/search?utf8=%E2%9C%93&q=language+translation+language%3A%22Jupyter+Notebook%22+&type=) are some example. This exercise will help you appreciate the full power of statistical translation techniques.
+Language Translation (NMT). 
 
 ## Overview
 
-This is the code for [this](https://youtu.be/nRBnh4qbPHI) video on Youtube by Siraj Raval as part of the Deep Learning Nanodegree course with Udacity. This code implemnents [Neural Machine Translation](https://github.com/neubig/nmt-tips) which is what Google Translate uses to translate Languages.
+This is the code for the language translation challenge by Siraj [here](https://youtu.be/nRBnh4qbPHI). This code implemnents [Neural Machine Translation](https://github.com/neubig/nmt-tips) which is what Google Translate uses to translate Languages.
 
 ## Dependencies
 
@@ -17,17 +14,50 @@ This is the code for [this](https://youtu.be/nRBnh4qbPHI) video on Youtube by Si
 
 Install missing dependencies with [pip](https://pip.pypa.io/en/stable/)
 
-
 ## Usage
 
 To train model on data and test it to compute the [BLEU score](https://en.wikipedia.org/wiki/BLEU) run this:
 
 ``python translate.py source_language target_language`` (i.e. python translate.py fr en for fr->en translation)
 
-Training results are shown in plot_training_process.ipynb.
+## Results
 
-Testing results and findings are discussed in the paper.
+* Translation from French -> English (fr-en dataset)
+  * Some success cases
+
+    | French     | English     |
+    |----------- |------------ |
+    | Bonjour    | Morning     |
+    | Au revior  | Good bye    |
+    | Merci      | Thanks      |
+    | Je m'appelle Dan Ellsey | My name is Dan Ellsey |
+
+  * Some failure cases
+
+    | French | English |
+    |--------|-------- |
+    | Voici Bill Lange | I am this next woman Bill |
+    | La vérité est que le Titanic | Long being why I see special of |
+    | Le problème | People |
+
+* Translation from Finnish -> English (fi-en dataset)
+  * Some success cases
+
+    | Finnish     | English     |
+    |----------- |------------ |
+    | Istuntokauden uudelleenavaaminen | Resumption |
+    | Hyvaa huomenta  | Good morning |
+    | Kiitos      | Thanks  |
+    | Nimeni on | My name is |
+
+  * Some failure cases
+
+    | Finnish | English |
+    |-------- |-------- |
+    | Voin taata täällä | Woman here I here say say say |
+    | Haluaisin kuitenkin painottaa | However, it it it stress |
+    | sanotun yhteisen maatalouspolitiikan  | s take of of of policy |
 
 ## Credits
 
-The credits for this code go to [fanshi118](https://github.com/fanshi118/NLP_NMT_Project). I've merely created a wrapper to get people started.
+Credits to [fanshi118](https://github.com/fanshi118/NLP_NMT_Project) for the base code and Siraj for the challenge idea.

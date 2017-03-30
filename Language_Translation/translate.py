@@ -29,7 +29,7 @@ tf.app.flags.DEFINE_integer("num_layers", 2, "Number of layers in the model.")
 tf.app.flags.DEFINE_integer("s_vocab_size", 30000, "Source language vocabulary size.")
 tf.app.flags.DEFINE_integer("t_vocab_size", 30000, "Target language vocabulary size.")
 tf.app.flags.DEFINE_string("data_dir", "./data/", "Data directory")
-tf.app.flags.DEFINE_string("train_dir", "./runs/fr_en_1/", "Training directory.")
+tf.app.flags.DEFINE_string("train_dir", "./runs/fr_en_2/", "Training directory.")
 tf.app.flags.DEFINE_integer("max_train_data_size", 0,
                             "Limit on the size of training data (0: no limit).")
 tf.app.flags.DEFINE_integer("steps_per_checkpoint", 200,
@@ -120,7 +120,7 @@ def train():
   with tf.Session() as sess:
     # Create model.
     print("Creating %d layers of %d units." % (FLAGS.num_layers, FLAGS.size))
-    model = create_model(sess, False, False)
+    model = create_model(sess, True, False)
 
     # Read data into buckets and compute their sizes.
     print("Reading development and training data (limit: %d)."
@@ -144,7 +144,7 @@ def train():
     train_steps, train_ppx, bucket_ppx = [], [], {0:[], 1:[], 2:[], 3:[]}
     
     # Put a limit on the number of iterations it takes to train (instead of the perplexity)
-    while current_step <= 2000:
+    while current_step <= 12000:
       # Choose a bucket according to data distribution. We pick a random number
       # in [0, 1] and use the corresponding interval in train_buckets_scale.
       random_number_01 = np.random.random_sample()
@@ -202,7 +202,7 @@ def train():
 def test_BLEU():
     # Perform BLEU score testing here
     with tf.Session() as sess:
-      model = create_model(sess, False, False)
+      model = create_model(sess, True, False)
       source = sys.argv[1]
       target = sys.argv[2]
       model.batch_size = 1  # We decode one sentence at a time.
