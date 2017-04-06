@@ -11,6 +11,7 @@ Time per epoch: 3s on CPU (core i7).
 '''
 from __future__ import print_function
 
+import keras
 from keras.models import Sequential, Model
 from keras.layers.embeddings import Embedding
 from keras.layers import Input, Activation, Dense, Permute, Dropout, merge
@@ -25,11 +26,13 @@ import tarfile
 import numpy as np
 import re
 
-train_model = 1
+train_model = 0
 train_epochs = 120
-load_model = 0
+load_model = 1
 batch_size = 32
 lstm_out_size = 32
+test_qualitative = 0
+user_questions = 1
 
 def tokenize(sent):
     '''Return the tokens of a sentence including punctuation.
@@ -242,19 +245,35 @@ model.compile(optimizer='rmsprop', loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 if load_model == 1:
-    model = load_model('model.h5')
+    model = keras.models.load_model('model.h5')
 
-if train_model == 0:
+if train_model == 1:
     # train, batch_size = 32 and epochs = 120
     model.fit([inputs_train, queries_train], answers_train, batch_size, train_epochs,
           validation_data=([inputs_test, queries_test], answers_test))
     model.save('model.h5')
 
-print('Qualitative Test Result Analysis')
+if test_qualitative == 1:
+    print('-------------------------------------------------------------------------------------------')
+    print('Qualitative Test Result Analysis')
+    for i in range(0,10):
+        current_inp = test_stories[i]
+        current_story, current_query, current_answer = vectorize_stories([current_inp], word_idx, story_maxlen, query_maxlen)
+        current_prediction = model.predict([current_story, current_query])
+        current_prediction = idx_word[np.argmax(current_prediction)]
+        print(' '.join(current_inp[0]), ' '.join(current_inp[1]), '| Prediction:', current_prediction, '| Ground Truth:', current_inp[2])
 
-for i in range(0,10):
-    current_inp = test_stories[i]
-    current_story, current_query, current_answer = vectorize_stories([current_inp], word_idx, story_maxlen, query_maxlen)
-    current_prediction = model.predict([current_story, current_query])
-    current_prediction = idx_word[np.argmax(current_prediction)+1]
-    print(' '.join(current_inp[0]), ' '.join(current_inp[1]), '| Prediction:', current_prediction, '| Ground Truth:', current_inp[2])
+if user_questions == 1:
+    print('-------------------------------------------------------------------------------------------')
+    print('Custom User Queries (Make sure there are spaces before each word)')
+    while 1:
+        print('-------------------------------------------------------------------------------------------')
+        print('Please input a story')
+        user_story_inp = raw_input().split(' ')
+        print('Please input a query')
+        user_query_inp = raw_input().split(' ')
+        user_story, user_query, user_ans = vectorize_stories([[user_story_inp, user_query_inp, '.']], word_idx, story_maxlen, query_maxlen)
+        user_prediction = model.predict([user_story, user_query])
+        user_prediction = idx_word[np.argmax(user_prediction)]
+        print('Result')
+        print(' '.join(user_story_inp), ' '.join(user_query_inp), '| Prediction:', user_prediction)
