@@ -16,7 +16,7 @@ from keras.models import Sequential, Model
 from keras.layers.embeddings import Embedding
 from keras.layers import Input, Activation, Dense, Permute, Dropout, merge
 from keras.layers.core import Merge
-from keras.layers import LSTM
+from keras.layers import LSTM, GRU
 from keras.utils.data_utils import get_file
 from keras.preprocessing.sequence import pad_sequences
 from keras import backend as K
@@ -26,13 +26,13 @@ import tarfile
 import numpy as np
 import re
 
-train_model = 0
-train_epochs = 120
-load_model = 1
+train_model = 1
+train_epochs = 100
+load_model = 0
 batch_size = 32
-lstm_out_size = 32
+lstm_size = 64
 test_qualitative = 0
-user_questions = 1
+user_questions = 0
 
 def tokenize(sent):
     '''Return the tokens of a sentence including punctuation.
@@ -231,9 +231,9 @@ print('Answer shape', answer)
 
 # the original paper uses a matrix multiplication for this reduction step.
 # we choose to use a RNN instead.
-answer = LSTM(lstm_out_size)(answer)  # Generate tensors of shape 32
-
-# one regularization layer -- more would probably be needed.
+#answer = LSTM(lstm_size, return_sequences=True)(answer)  # Generate tensors of shape 32
+#answer = Dropout(0.3)(answer)
+answer = LSTM(lstm_size)(answer)  # Generate tensors of shape 32
 answer = Dropout(0.3)(answer)
 answer = Dense(vocab_size)(answer)  # (samples, vocab_size)
 # we output a probability distribution over the vocabulary
