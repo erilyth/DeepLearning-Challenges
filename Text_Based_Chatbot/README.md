@@ -4,7 +4,7 @@ A chatbot that takes a small story and a query as an input and predicts a possib
 
 ## Overview
 
-This is the code for [this](https://youtu.be/t5qgjJIBy9g) by Siraj. This code trains an end-to-end memory network, since there doesn't yet exist a 'dynamic' memory network implementation in Keras. For an example of a 'dynamic' memory network see [this](https://github.com/ethancaballero/Improved-Dynamic-Memory-Networks-DMN-plus) repository. 
+This is the code for [this](https://youtu.be/t5qgjJIBy9g) by Siraj. This code trains an end-to-end memory network, since there doesn't yet exist a 'dynamic' memory network implementation in Keras. For an example of a 'dynamic' memory network see [this](https://github.com/ethancaballero/Improved-Dynamic-Memory-Networks-DMN-plus) repository.
 
 (Trained models have been included in `trained_models/`)
 
@@ -31,6 +31,7 @@ This is the code for [this](https://youtu.be/t5qgjJIBy9g) by Siraj. This code tr
 
 * The models with two or more layers required more training since there are more parameters that need to be set, but then have greater accuracies than the other models once trained completely.
 * Overall, LSTM based models performed better than GRU based models for this task.
+* The dataset used here is `babi-tasks-v1-2`, its a relatively small dataset but a great dataset nonetheless.
 
 ## Usage
 

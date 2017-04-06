@@ -9,6 +9,7 @@
 * Linear Regression
 * Music Generation
 * Sentiment Analysis
+* Text Based Chatbot
 
 ### Credits
 
