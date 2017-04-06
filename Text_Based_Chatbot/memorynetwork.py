@@ -25,6 +25,11 @@ import tarfile
 import numpy as np
 import re
 
+train_model = 1
+train_epochs = 120
+load_model = 0
+batch_size = 32
+lstm_out_size = 32
 
 def tokenize(sent):
     '''Return the tokens of a sentence including punctuation.
@@ -140,6 +145,7 @@ print('-')
 print('Vectorizing the word sequences...')
 
 word_idx = dict((c, i + 1) for i, c in enumerate(vocab))
+idx_word = dict((i+1, c) for i,c in enumerate(vocab))
 inputs_train, queries_train, answers_train = vectorize_stories(train_stories,
                                                                word_idx,
                                                                story_maxlen,
@@ -222,7 +228,7 @@ print('Answer shape', answer)
 
 # the original paper uses a matrix multiplication for this reduction step.
 # we choose to use a RNN instead.
-answer = LSTM(32)(answer)  # Generate tensors of shape 32
+answer = LSTM(lstm_out_size)(answer)  # Generate tensors of shape 32
 
 # one regularization layer -- more would probably be needed.
 answer = Dropout(0.3)(answer)
@@ -235,6 +241,20 @@ model = Model([input_sequence, question], answer)
 model.compile(optimizer='rmsprop', loss='categorical_crossentropy',
               metrics=['accuracy'])
 
-# train, batch_size = 32 and epochs = 120
-model.fit([inputs_train, queries_train], answers_train, 32, 120,
+if load_model == 1:
+    model = load_model('model.h5')
+
+if train_model == 0:
+    # train, batch_size = 32 and epochs = 120
+    model.fit([inputs_train, queries_train], answers_train, batch_size, train_epochs,
           validation_data=([inputs_test, queries_test], answers_test))
+    model.save('model.h5')
+
+print('Qualitative Test Result Analysis')
+
+for i in range(0,10):
+    current_inp = test_stories[i]
+    current_story, current_query, current_answer = vectorize_stories([current_inp], word_idx, story_maxlen, query_maxlen)
+    current_prediction = model.predict([current_story, current_query])
+    current_prediction = idx_word[np.argmax(current_prediction)+1]
+    print(' '.join(current_inp[0]), ' '.join(current_inp[1]), '| Prediction:', current_prediction, '| Ground Truth:', current_inp[2])
