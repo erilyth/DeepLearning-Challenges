@@ -4,3 +4,4 @@ Image_Classifier/inception_v4.ckpt
 Language_Translation/runs/*
 Language_Translation/data/*
 Language_Translation/data2/*
+Image_Synthesis_From_Text/char-CNN-RNN/birds_data
