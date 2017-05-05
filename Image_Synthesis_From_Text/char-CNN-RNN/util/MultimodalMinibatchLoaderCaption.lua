@@ -22,7 +22,7 @@ function MultimodalMinibatchLoaderCaption.create(data_dir, nclass, img_dim, doc_
     for line in io.lines(path.join(data_dir, 'manifest.txt')) do
         self.files[#self.files + 1] = line
     end
-
+    -- print(#self.files)
     -- load train / val / test splits.
     self.trainids = {}
     for line in io.lines(path.join(data_dir, ids_file)) do
@@ -79,7 +79,7 @@ function MultimodalMinibatchLoaderCaption:next_batch()
         local ix_view = torch.randperm(cls_imgs:size(3))[1]
         img[{i, {}}] = cls_imgs[{ix, {}, ix_view}]
         lab[i] = i
-        
+
         for j = 1,cls_sens:size(2) do
             local on_ix
             
@@ -89,6 +89,7 @@ function MultimodalMinibatchLoaderCaption:next_batch()
             	on_ix = cls_sens[{ix, j, sen_ix[1]}]
             end            
             
+
             if on_ix == 0 then
                 break
             end

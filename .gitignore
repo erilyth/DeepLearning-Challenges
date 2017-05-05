@@ -5,3 +5,5 @@ Language_Translation/runs/*
 Language_Translation/data/*
 Language_Translation/data2/*
 Image_Synthesis_From_Text/char-CNN-RNN/birds_data
+Image_Synthesis_From_Text/char-CNN-RNN/pascal1k/cnn_weights.hdf5
+Image_Synthesis_From_Text/char-CNN-RNN/cv/*
