@@ -7,6 +7,7 @@ from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.callbacks import ModelCheckpoint
 from keras import backend as K
+import pickle
 
 import lutorpy as lua
 
@@ -16,6 +17,8 @@ batch_size = 16
 num_classes = 20
 epochs = 1000
 
+total_features = []
+
 # input image dimensions
 img_rows, img_cols = 128, 256
 
@@ -23,6 +26,7 @@ train_data = []
 train_labels = []
 
 file_names = []
+class_ids = []
 
 filelist = open('filelist.txt', 'r')
 
@@ -30,6 +34,7 @@ for file in filelist.readlines():
   fname, classid = file.split(' ')
   file_names.append(fname)
   classid = int(classid) - 1 # Make them zero indexed
+  class_ids.append(classid+1)
   imgfile = Image.open(fname)
   img = imgfile.resize((img_rows, img_cols), Image.ANTIALIAS)  
   img = np.asarray(img)
@@ -99,7 +104,12 @@ dense_lyr_out_f = K.function([model.layers[0].input, K.learning_phase()], [dense
 
 for data_point in range(len(train_data)):
   cur_out =  dense_lyr_out_f([[train_data[data_point],], 0])[0]
+  total_features.append(cur_out.tolist())
   cur_out = np.expand_dims(np.asarray(cur_out), axis=2)
   out_name = file_names[data_point] + 'features.t7'
   tensor_t = torch.fromNumpyArray(cur_out)
-  torch.save(out_name, tensor_t)
+  #torch.save(out_name, tensor_t)
+
+pickle.dump(total_features, open("char-CNN-RNN-embeddings.pickle", "wb"))
+pickle.dump(class_ids, open("class_info.pickle", "wb"))
+pickle.dump(file_names, open("filenames.pickle", "wb"))
