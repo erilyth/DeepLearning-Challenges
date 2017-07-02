@@ -15,7 +15,7 @@ import keras
 from keras.models import Sequential, Model
 from keras.layers.embeddings import Embedding
 from keras.layers import Input, Activation, Dense, Permute, Dropout, merge
-from keras.layers.core import Merge
+from keras.layers import Merge
 from keras.layers import LSTM, GRU
 from keras.utils.data_utils import get_file
 from keras.preprocessing.sequence import pad_sequences
@@ -31,7 +31,7 @@ train_epochs = 100
 load_model = 0
 batch_size = 32
 lstm_size = 64
-test_qualitative = 0
+test_qualitative = 1
 user_questions = 0
 
 def tokenize(sent):
