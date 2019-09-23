@@ -26,7 +26,7 @@ jupyter-core==4.3.0
 Keras==1.2.2
 MarkupSafe==0.23
 matplotlib==2.0.0
-mistune==0.7.3
+mistune==0.8.1
 mock==2.0.0
 nbconvert==5.1.1
 nbformat==4.2.0
