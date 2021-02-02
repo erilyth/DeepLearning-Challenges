@@ -2,7 +2,7 @@ appdirs==1.4.0
 appnope==0.1.0
 backports-abc==0.5
 backports.shutil-get-terminal-size==1.0.0
-bleach==1.5.0
+bleach==3.3.0
 certifi==2017.1.23
 configparser==3.5.0
 cycler==0.10.0
