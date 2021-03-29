@@ -43,7 +43,7 @@ Pillow==4.0.0
 prompt-toolkit==1.0.13
 protobuf==3.2.0
 ptyprocess==0.5.1
-Pygments==2.2.0
+Pygments==2.7.4
 pyparsing==2.1.10
 python-dateutil==2.6.0
 pytz==2016.10
