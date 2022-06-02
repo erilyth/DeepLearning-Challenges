@@ -12,7 +12,7 @@ enum34==1.1.6
 funcsigs==1.0.2
 functools32==3.2.3.post2
 h5py==2.6.0
-html5lib==0.9999999
+html5lib==0.99999999
 ipykernel==4.5.2
 ipython==5.2.2
 ipython-genutils==0.1.0
